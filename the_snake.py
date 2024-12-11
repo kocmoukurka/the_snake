@@ -201,7 +201,7 @@ def main():
     snake = Snake()
     while True:
         # Тут опишите основную логику игры.
-        clock.tick(4)
+        clock.tick(SPEED)
         handle_keys(snake)
         snake.update_direction()
         snake.move()
