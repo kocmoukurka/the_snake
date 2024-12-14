@@ -65,7 +65,7 @@ class Apple(GameObject):
     яблока на игровом поле
     """
 
-    def __init__(self, occupied_cells):
+    def __init__(self, occupied_cells=[GameObject().position]):
         """Инициализирует объект apple = Apple()
         :свойство: body_color цвет яблока
         :свойство: position рандомная позиция яблока на игровом поле
@@ -204,7 +204,7 @@ def main():
     pg.init()
     # Тут нужно создать экземпляры классов.
     snake = Snake()
-    apple = Apple(snake.positions)
+    apple = Apple()
     while True:
         # Тут опишите основную логику игры.
         clock.tick(SPEED)
