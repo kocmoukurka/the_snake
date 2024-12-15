@@ -12,9 +12,6 @@ GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 # Константы с коодинатами ячеек по x и y
 COORDINATES_X = [i * GRID_SIZE for i in range(0, GRID_WIDTH)]
 COORDINATES_Y = [i * GRID_SIZE for i in range(0, GRID_HEIGHT)]
-# Константы для проверки выхода головы за игровое поле
-TRANSITION_BY_X = {-20: 620, 640: 0}
-TRANSITION_BY_Y = {-20: 460, 480: 0}
 
 # Направления движения:
 UP = (0, -1)
@@ -65,10 +62,12 @@ class Apple(GameObject):
     яблока на игровом поле
     """
 
-    def __init__(self, occupied_cells=[GameObject().position]):
+    def __init__(self, occupied_cells=[(320, 240)]):
         """Инициализирует объект apple = Apple()
-        :свойство: body_color цвет яблока
-        :свойство: position рандомная позиция яблока на игровом поле
+        :occupied_cells: Принемает на вход список с координатами всех сегментов 
+        змейки. Координаты по умолчанию это координаты появления змейки
+        :body_color:  Цвет яблока
+        :position:  Рандомная позиция яблока на игровом поле
         """
         super().__init__()
         self.body_color = APPLE_COLOR
@@ -113,15 +112,14 @@ class Snake(GameObject):
     def __init__(self):
         """
         __init__ — инициализирует начальное состояние змейки.
-        :свойство: length — длина змейки. Изначально змейка имеет длину 1.
-        :свойство: positions — список, содержащий позиции всех сегментов тела
+        :length:  Длина змейки. Изначально змейка имеет длину 1.
+        :positions:  Список, содержащий позиции всех сегментов тела
           змейки. Начальная позиция — центр экрана.
-        :свойство: direction — направление движения змейки. По умолчанию змейка
+        :direction:  Направление движения змейки. По умолчанию змейка
           движется вправо.
-        :свойство: next_direction — следующее направление движения, которое
-        будет
+        :next_direction:  Следующее направление движения, которое будет
           применено после обработки нажатия клавиши. По умолчанию задать None.
-        :свойство: body_color — цвет змейки. Задаётся RGB-значением
+        :body_color:  Цвет змейки. Задаётся RGB-значением
           (по умолчанию — зелёный: (0, 255, 0)).
         """
         super().__init__()
@@ -166,21 +164,17 @@ class Snake(GameObject):
 
     def move(self):
         """Метод для просчета движения змейки по игровому полю
-        :Словарь: transition_by_x словарь для получения координат
-        по оси SCREEN_WIDTH при пересечении границ игрового поля
-        :Словарь: transition_by_y словарь для получения координат
-        по оси SCREEN_HEIGHT при пересечении границ игрового поля
+        :head_x: Координаты головы по оси SCREEN_WIDTH
+        :head_y: Координаты головы по оси SCREEN_HEIGHT
+        :direction_x: Напровление движения по оси SCREEN_WIDTH
+        :direction_y: Напровление движения по оси SCREEN_HEIGHT
         :Переменные: dx и dy используются для временного хранения координат
-        по осям SCREEN_WIDTH и SCREEN_HEIGHT и проверки пересечения границы
-        игрового поля
+        по осям SCREEN_WIDTH и SCREEN_HEIGHT
         """
-        dx, dy = tuple(
-            int((self.get_head_position[i]
-                // GRID_SIZE + self.direction[i]) * GRID_SIZE) for i in [0, 1])
-        if dx in TRANSITION_BY_X.keys():
-            dx = TRANSITION_BY_X[dx]
-        if dy in TRANSITION_BY_Y.keys():
-            dy = TRANSITION_BY_Y[dy]
+        head_x, head_y = self.get_head_position
+        direction_x, direction_y = self.direction
+        dx = (head_x + (direction_x * GRID_SIZE)) % SCREEN_WIDTH
+        dy = (head_y + (direction_y * GRID_SIZE)) % SCREEN_HEIGHT
         self.positions.insert(0, (dx, dy))
         if self.length < len(self.positions):
             self.last = self.positions.pop()
@@ -196,15 +190,15 @@ def main():
     """В данном методе реализована логика игры.
     Создаются и отрисовываются объекты классов Apple() и Snake().
     Проверяется нажатие кнопок и устанавливается направление движения змейки.
-    Проверяются столкновения змейки и яблока,а
-    также проверяется столкновение змейки с собой,
-    в случае столкновения змейки с самой собой игра начинается заново.
+    Проверяются столкновения змейки и яблока, а также проверяется столкновение
+    змейки с самой собой.
+    В случае столкновения змейки с самой собой игра начинается заново.
     """
     # Инициализация pg:
     pg.init()
     # Тут нужно создать экземпляры классов.
     snake = Snake()
-    apple = Apple()
+    apple = Apple(snake.positions)
     while True:
         # Тут опишите основную логику игры.
         clock.tick(SPEED)
