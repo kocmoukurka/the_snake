@@ -12,6 +12,8 @@ GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 # Константы с коодинатами ячеек по x и y
 COORDINATES_X = [i * GRID_SIZE for i in range(0, GRID_WIDTH)]
 COORDINATES_Y = [i * GRID_SIZE for i in range(0, GRID_HEIGHT)]
+# Центр игрового поля
+CENTER_FIELD = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT // 2))
 
 # Направления движения:
 UP = (0, -1)
@@ -49,8 +51,7 @@ class GameObject:
     """GameObject является родительским классом для Apple и Snake"""
 
     def __init__(self):
-        self.position = (
-            SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.position = CENTER_FIELD
         self.body_color = None
 
     def draw(self):
@@ -62,7 +63,7 @@ class Apple(GameObject):
     яблока на игровом поле
     """
 
-    def __init__(self, occupied_cells=[(320, 240)]):
+    def __init__(self, occupied_cells=None):
         """Инициализирует объект apple = Apple()
         :occupied_cells: Принемает на вход список с координатами всех сегментов
         змейки. Координаты по умолчанию это координаты появления змейки
@@ -71,7 +72,11 @@ class Apple(GameObject):
         """
         super().__init__()
         self.body_color = APPLE_COLOR
-        self.position = self.randomize_position(occupied_cells)
+        self.position = occupied_cells
+        if self.position:
+            self.randomize_position(occupied_cells)
+        else:
+            self.randomize_position([CENTER_FIELD])
 
     def randomize_position(self, occupied_cells):
         """
@@ -82,7 +87,7 @@ class Apple(GameObject):
         """
         dx = list(set(COORDINATES_X) - set([i[0] for i in occupied_cells]))
         dy = list(set(COORDINATES_Y) - set([i[1] for i in occupied_cells]))
-        return (
+        self.position = (
             choice(dx),
             choice(dy))
 
@@ -135,6 +140,7 @@ class Snake(GameObject):
         """Метод обновления направления после нажатия на кнопку"""
         if self.next_direction:
             self.direction = self.next_direction
+            self.next_direction = None
 
     def draw(self):
         """Метод отрисовки змейки на игровом поле"""
@@ -180,10 +186,14 @@ class Snake(GameObject):
             self.last = self.positions.pop()
 
     def reset(self):
-        """Вызывает метод __init__() для сброса змейки в случае смерти к
-        стартовым координатам и длине тела
+        """Возвращаем змейку к изначальному состоянию.
+        :next_direction: Задаем рандомное напровление движения.
         """
-        self.__init__()
+        self.length = 1
+        self.positions = [self.position]
+        self.next_direction = choice((LEFT, RIGHT, UP, DOWN))
+        self.update_direction()
+        self.last = None
 
 
 def main():
@@ -207,7 +217,7 @@ def main():
         snake.move()
         if snake.get_head_position == apple.position:
             snake.length += 1
-            apple.__init__(snake.positions)
+            apple.randomize_position(snake.positions)
         elif snake.get_head_position in snake.positions[1:]:
             screen.fill(BOARD_BACKGROUND_COLOR)
             snake.reset()
